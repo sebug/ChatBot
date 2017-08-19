@@ -30,6 +30,7 @@ namespace ChatBot.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Activity activity)
         {
+            string authorizationHeader = this.Request.Headers["Authorization"];
             string conversationID = null;
 
             string activityID = null;
@@ -58,10 +59,15 @@ namespace ChatBot.Controllers
 					message.text = "Ohai " + activity.text;
                     message.replyToId = activity.id;
 
-					client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-					var response = await client.PostAsync(
-                        $"{serviceUrl}/v3/conversations/{conversationID}/activities/{activityID}",
+                    if (serviceUrl.StartsWith("https", StringComparison.InvariantCultureIgnoreCase)) {
+						client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);   
+                    }
+
+                    string postUrl =
+                        $"{serviceUrl}/v3/conversations/{conversationID}/activities/{activityID}";
+                    
+                    var response = await client.PostAsync(postUrl,
 						new StringContent(JsonConvert.SerializeObject(message),
 										  Encoding.UTF8, "application/json"));
                     var statusCode = response.StatusCode;
