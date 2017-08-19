@@ -60,9 +60,7 @@ namespace ChatBot.Controllers
                     message.replyToId = activity.id;
 
 
-                    if (serviceUrl.StartsWith("https", StringComparison.InvariantCultureIgnoreCase)) {
-						client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);   
-                    }
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                     string postUrl =
                         $"{serviceUrl}/v3/conversations/{conversationID}/activities/{activityID}";
@@ -95,7 +93,7 @@ namespace ChatBot.Controllers
 					{
                         {"client_id", this._chatBotOptions.AppID },
                         {"client_secret", this._chatBotOptions.Secret },
-						{"scope", "https://graph.microsoft.com/.default" },
+						{"scope", "https://api.botframework.com/.default" },
 						{"grant_type", "client_credentials" }
 					};
 					var content = new FormUrlEncodedContent(parameters);
