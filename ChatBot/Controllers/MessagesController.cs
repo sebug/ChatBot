@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChatBot.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -15,15 +16,19 @@ namespace ChatBot.Controllers
 	/// <summary>
 	/// Messages controller.
 	/// 
-	/// Based on https://carlos.mendible.com/2016/09/11/netcore-and-microsoft-bot-framework/
+	/// Based on https://carlos.mendible.com/2016/09/11/netcore-and-microsoft-bot-framework/ ,
+    /// but heavily modified since none of the calls seem to stay.
 	/// </summary>
 	[Route("api/[controller]")]
     public class MessagesController : Controller
     {
+        private readonly IMemoryCache _memoryCache;
 		private readonly ChatBotOptions _chatBotOptions;
 
-		public MessagesController(IOptions<ChatBotOptions> chatBotOptions)
+		public MessagesController(IMemoryCache memoryCache,
+            IOptions<ChatBotOptions> chatBotOptions)
 		{
+            this._memoryCache = memoryCache;
 			this._chatBotOptions = chatBotOptions.Value;
 		}
 
@@ -82,7 +87,7 @@ namespace ChatBot.Controllers
 		private async Task<string> GetBotApiToken()
 		{
             // Check to see if we already have a valid token
-            string token = null; //memoryCache.Get("token")?.ToString();
+            string token = this._memoryCache.Get("token")?.ToString();
 			if (string.IsNullOrEmpty(token))
 			{
 				// we need to get a token.
@@ -99,7 +104,7 @@ namespace ChatBot.Controllers
 					var content = new FormUrlEncodedContent(parameters);
 
 					// Post
-					var response = await client.PostAsync("https://login.microsoftonline.com/common/oauth2/v2.0/token", content);
+					var response = await client.PostAsync("https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token", content);
 
                     // Get the token response
                     string r = await response.Content.ReadAsStringAsync();
@@ -109,10 +114,10 @@ namespace ChatBot.Controllers
 					token = tokenResponse.access_token;
 
 					// Cache the token for 15 minutes.
-					//memoryCache.Set(
-					//	"token",
-					//	token,
-					//	new DateTimeOffset(DateTime.Now.AddMinutes(15)));
+                    this._memoryCache.Set(
+						"token",
+						token,
+						new DateTimeOffset(DateTime.Now.AddMinutes(15)));
 				}
 			}
 

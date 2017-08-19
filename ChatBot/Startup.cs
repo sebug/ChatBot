@@ -27,6 +27,8 @@ namespace ChatBot
 
             services.Configure<ChatBotOptions>(Configuration);
 
+            services.AddMemoryCache();
+
             services.AddMvc();
         }
 
